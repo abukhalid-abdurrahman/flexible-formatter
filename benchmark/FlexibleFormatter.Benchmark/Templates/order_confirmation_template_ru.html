@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Уведомление о заказе</title>
+
+  <style>
+    /* Общие сбросы для писем */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100% !important;
+      height: 100% !important;
+      background: #f3f5f7;
+    }
+
+    img {
+      border: 0;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+      -ms-interpolation-mode: bicubic;
+      display: block;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Контейнер письма */
+    .email-wrap {
+      width: 100%;
+      background: #f3f5f7;
+      padding: 40px 0;
+      box-sizing: border-box;
+    }
+
+    /* Центрированная карточка */
+    .email-card {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(20, 30, 50, 0.12);
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      border: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    /* Верхняя секция (спейсер + логотип) */
+    .header {
+      padding: 22px 28px 12px 28px;
+      background: linear-gradient(90deg, #ffffff 0%, #fbfdff 100%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .header .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+    }
+
+    .logo h1 {
+      font-size: 18px;
+      margin: 0;
+      color: #0f1724;
+      letter-spacing: -0.2px;
+    }
+
+    /* Основной контент */
+    .content {
+      padding: 28px;
+      color: #111827;
+      line-height: 1.45;
+      font-size: 15px;
+    }
+
+    .kicker {
+      display: inline-block;
+      padding: 6px 10px;
+      background: #eef2ff;
+      color: #3730a3;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: 20px;
+      margin: 4px 0 12px 0;
+      color: #0b1220;
+      font-weight: 800;
+    }
+
+    .lead {
+      font-size: 16px;
+      margin-bottom: 18px;
+      color: #374151;
+    }
+
+    .notice {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      padding: 12px;
+      border-radius: 8px;
+      color: #92400e;
+      margin: 18px 0;
+    }
+
+    .order-panel {
+      display: block;
+      padding: 14px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #ffffff, #fbfbff);
+      border: 1px dashed rgba(99, 102, 241, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    /* Список деталей заказа */
+    .details {
+      margin: 14px 0 20px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .details li {
+      padding: 10px 0;
+      border-bottom: 1px dashed rgba(15, 23, 42, 0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .details li:last-child {
+      border-bottom: 0;
+    }
+
+    .details .label {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .details .value {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    /* Кнопка */
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #4f46e5, #06b6d4);
+      color: #ffffff;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 6px 18px rgba(79, 70, 229, 0.18);
+    }
+
+    /* Дополнительные элементы */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #e6e9ee, transparent);
+      margin: 20px 0;
+      border-radius: 1px;
+    }
+
+    .meta {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .footer {
+      padding: 18px 28px;
+      background: #fbfdff;
+      border-top: 1px solid rgba(0, 0, 0, 0.02);
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .address {
+      display: block;
+      margin-top: 8px;
+      color: #9aa3af;
+      font-style: normal;
+    }
+
+    /* Мелкие декоративные классы (много тегов) */
+    .hr {
+      border: none;
+      height: 1px;
+      background: #eef2f6;
+      margin: 16px 0;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .card-mini {
+      padding: 10px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.02);
+      box-shadow: 0 4px 10px rgba(2, 6, 23, 0.03);
+    }
+
+    /* Мобильная адаптация */
+    @media screen and (max-width:520px) {
+      .content {
+        padding: 18px;
+      }
+
+      .header {
+        padding: 16px;
+      }
+
+      .title {
+        font-size: 18px;
+      }
+
+      .email-card {
+        margin: 0 12px;
+      }
+
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <table class="email-wrap" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td align="center">
+        <!-- Карточка -->
+        <table class="email-card" width="700" cellpadding="0" cellspacing="0" role="presentation">
+          <!-- Header -->
+          <tr>
+            <td class="header">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <div class="logo" aria-hidden="true">
+                      <img src="https://via.placeholder.com/48x48.png?text=Logo" alt="Логотип" />
+                      <div>
+                        <h1>Flexible Formatter Commerce</h1>
+                        <div class="small">Подтверждение заказа</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="text-align:right;vertical-align:middle;">
+                    <div class="small">Order #<strong>$OrderNumber$</strong></div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td class="content">
+              <span class="kicker">Информация</span>
+
+              <h2 class="title">Уважаемый $FullName$, ваш заказ принят</h2>
+
+              <p class="lead">
+                Благодарим за покупку! Мы успешно получили ваш заказ и начали его обработку.
+                Ниже вы найдёте полную информацию о заказе, оплате и доставке.
+              </p>
+
+              <div class="notice" role="note" aria-label="Important notice">
+                Пожалуйста, сохраните это письмо. Если вы не совершали покупку, свяжитесь с нашей службой поддержки
+                немедленно.
+              </div>
+
+              <div class="order-panel" role="region" aria-labelledby="order-summary">
+                <h3 id="order-summary" style="margin:0 0 10px 0;font-size:16px;">Сводка заказа</h3>
+
+                <!-- Таблица деталей (еще тэгов) -->
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                  <tr>
+                    <td style="padding:6px 0;">
+                      <strong>Дата заказа:</strong> <span class="meta">$OrderDate$</span>
+                    </td>
+                    <td style="text-align:right;padding:6px 0;">
+                      <strong>Статус:</strong> <span style="color:#059669;font-weight:800;">Принят</span>
+                    </td>
+                  </tr>
+                </table>
+
+                <hr class="hr" />
+
+                <ul class="details" aria-label="Order details">
+                  <li><span class="label">Товар</span><span class="value">$ProductName$</span></li>
+                  <li><span class="label">Кол-во</span><span class="value">$Amount$</span></li>
+                  <li><span class="label">Цена за единицу</span><span class="value">€$UnitPrice$</span></li>
+                  <li><span class="label">Доставка</span><span class="value">$ShipmentMethod$</span></li>
+                </ul>
+
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                  <a href="#" class="btn" role="button" aria-label="Посмотреть заказ">Посмотреть заказ</a>
+                  <a href="#"
+                    style="display:inline-block;padding:12px 14px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);text-decoration:none;font-weight:700;background:#ffffff;">Связаться
+                    с поддержкой</a>
+                </div>
+
+                <div class="divider" aria-hidden="true"></div>
+
+                <!-- Дополнительные блоки, карточки и теги -->
+                <div class="card-grid" role="list">
+                  <div class="card-mini" role="listitem">
+                    <h4 style="margin:0 0 6px 0;">Информация об оплате</h4>
+                    <p class="small" style="margin:0;">Метод: <strong>Карта Visa</strong><br />Сумма:
+                      <strong>€$TotalAmount$</strong></p>
+                  </div>
+                  <div class="card-mini" role="listitem">
+                    <h4 style="margin:0 0 6px 0;">Доставка</h4>
+                    <p class="small" style="margin:0;">Адрес: $Address$<br />Ожидаемая дата:
+                      <strong>$EstimatedDate$</strong></p>
+                  </div>
+                </div>
+
+              </div> <!-- /.order-panel -->
+
+              <!-- Больше HTML — блоки, цитаты, код, адрес -->
+              <div style="margin-top:18px;">
+                <blockquote
+                  style="margin:12px 0;padding:12px 14px;border-left:4px solid #e6edf6;background:#fbfdff;border-radius:8px;">
+                  <p style="margin:0;font-style:italic;">"Мы ценим каждого клиента. Ваш заказ важен для нас и будет
+                    обработан с вниманием."</p>
+                </blockquote>
+
+                <pre style="background:#0f1724;color:#f8fafc;padding:12px;border-radius:8px;overflow:auto;"><code>OrderId: $OrderNumber$
+Status: accepted
+Customer: {0}
+Items: $Amount$ x $ProductName$</code></pre>
+
+                <p style="margin-top:12px;">
+                  <strong>Прим: </strong>Если нужно изменить заказ — ответьте на это письмо или нажмите «Связаться с
+                  поддержкой».
+                </p>
+
+                <hr style="border:none;height:1px;background:#eef2f6;margin:18px 0;border-radius:2px;" />
+
+                <section aria-labelledby="more-info">
+                  <h3 id="more-info" style="margin:0 0 8px 0;">Дополнительная информация</h3>
+                  <article>
+                    <p class="small">Гарантия на товар — 12 месяцев. Правила возврата доступны на нашем сайте.</p>
+                    <nav aria-label="policy-links" style="margin-top:8px;">
+                      <a href="#" style="margin-right:12px;font-size:13px;">Условия</a>
+                      <a href="#" style="margin-right:12px;font-size:13px;">Политика возврата</a>
+                      <a href="#" style="font-size:13px;">Контакты</a>
+                    </nav>
+                  </article>
+                </section>
+
+              </div>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td class="footer">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="vertical-align:top;">
+                    <div><strong>Acme Commerce</strong></div>
+                    <address class="address">ул. Примерная, 10, г. Город, Страна</address>
+                    <div class="small">Email: <a href="mailto:info@example.com">info@example.com</a> • Тел: +123 456 789
+                    </div>
+                  </td>
+                  <td style="vertical-align:top;text-align:right;">
+                    <div class="small">Вы получили это письмо потому что сделали заказ на нашем сайте.</div>
+                    <div style="margin-top:8px;">
+                      <a href="#" style="margin-right:8px;font-size:12px;">Отписаться</a>
+                      <a href="#" style="font-size:12px;">Настройки</a>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table> <!-- /.email-card -->
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>
