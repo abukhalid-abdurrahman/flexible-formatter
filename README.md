@@ -287,7 +287,7 @@ string result = formatter.Format(new Dictionary<string, object?>
 });
 ```
 
-## Running Benchmarks
+## Benchmark Results
 
 | Method                                         | Mean             | Error         | StdDev        | Ratio | Gen0     | Gen1    | Allocated | Alloc Ratio |
 |----------------------------------------------- |-----------------:|--------------:|--------------:|------:|---------:|--------:|----------:|------------:|
