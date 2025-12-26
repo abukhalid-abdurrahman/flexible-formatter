@@ -47,3 +47,9 @@
 - Properties:
   - `Template` - Gets the original format string
   - `MinimumArgumentCount` - Gets the minimum number of arguments required for indexed parameters
+
+## [2.0.0] - 2025-12-26
+
+### Added
+
+- Updating to **.NET 10**

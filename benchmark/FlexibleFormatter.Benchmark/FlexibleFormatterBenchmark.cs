@@ -1,4 +1,3 @@
-
 using BenchmarkDotNet.Attributes;
 
 namespace FlexibleFormatter.Benchmark;
