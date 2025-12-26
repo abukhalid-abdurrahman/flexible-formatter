@@ -53,3 +53,11 @@
 ### Added
 
 - Updating to **.NET 10**
+
+## [2.1.0] - 2025-12-26
+
+### Public API
+
+- **Memory strategies**: Choose between heap (`StringBuilder`) or stack allocation (`DefaultInterpolatedStringHandler`)
+- **FormatNamed API**: Generic methods to avoid dictionary allocations for better performance
+- **Configurable buffers**: Customize stack buffer size from 256 to 32,768 characters

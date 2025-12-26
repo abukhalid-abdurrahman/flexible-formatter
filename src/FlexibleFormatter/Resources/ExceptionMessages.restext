@@ -1,0 +1,7 @@
+UseParseCustomForCustomDelimiters=Use ParseCustom for custom delimiters.
+DelimitersCannotBeEmpty=Delimiters cannot be empty.
+BufferSizeMustBeBetweenZeroAnd=Buffer size must be between 0 and {0}.
+FormatRequiresAtLeastArgument=Format requires at least {0} arguments, but only {1} were provided.
+NumberOfNamesNotMatchNumberOfArguments=The number of names ({0}) does not match the number of arguments ({1}).
+NoArgumentsWereProvided=No arguments were provided for named parameters.
+NoNamesWereProvided=No names were provided for named parameters.
