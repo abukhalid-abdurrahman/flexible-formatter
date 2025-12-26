@@ -11,8 +11,8 @@ public partial class FlexibleFormatterBenchmark
     private static readonly FlexibleFormatter _flexibleFormatterIndexed =
         FlexibleFormatter.Parse(TemplateForStringFormat);
 
-    private const  string _name = "Faridun Berdiev";
-    private const  string _profileUrl = "https://wargaming.net/en";
+    private const string _name = "John Doe";
+    private const string _profileUrl = "example.com";
     private static readonly DateTime _lastUpdated = DateTime.Now;
     private const int _newMessages = 12;
     private const int _pendingTasks = 3;

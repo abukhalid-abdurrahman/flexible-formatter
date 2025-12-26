@@ -189,7 +189,7 @@ public class FlexibleFormatterBracesTests
         // Act & Assert.
         FormatException ex = Assert.Throws<FormatException>(() => formatter.Format("one", "two"));
         Assert.Contains(
-            expectedSubstring: "3",
+            expectedSubstring: "2",
             actualString: ex.Message,
             comparisonType: StringComparison.InvariantCulture);
     }

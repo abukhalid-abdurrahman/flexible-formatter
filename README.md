@@ -11,6 +11,9 @@ A high-performance, flexible string formatting library for .NET that supports mu
 - **Mixed parameters**: Combine indexed and named parameters in the same template
 - **Parse once, format many**: Parse your template once and reuse it for multiple formatting operations
 - **Performance**: Optimized for speed with minimal allocations
+- **Memory strategies**: Choose between heap (`StringBuilder`) or stack allocation (`DefaultInterpolatedStringHandler`)
+- **FormatNamed API**: Generic methods to avoid dictionary allocations for better performance
+- **Configurable buffers**: Customize stack buffer size from 256 to 32,768 characters
 - **Clear error messages**: Get helpful error messages with exact positions when something goes wrong
 
 ## Quick Start
@@ -160,6 +163,165 @@ string result = formatter.Format(
 // Output: "Order ORD-123 for Alice contains 5 items. Status: Shipped"
 ```
 
+## Memory Allocation Strategies
+
+FlexibleFormatter supports two memory allocation strategies to optimize performance for different scenarios:
+
+### AllocatorType.Heap (Default)
+
+Uses `StringBuilder` for string construction. This is the default and safest option, suitable for strings of any size.
+
+```csharp
+FlexibleFormatter formatter = FlexibleFormatter.Parse(
+    "Hello {name}!", 
+    ParameterStyle.Braces,
+    AllocatorType.Heap);
+
+string result = formatter.Format(new Dictionary<string, object?> { ["name"] = "Alice" });
+```
+
+### AllocatorType.StackAlloc
+
+Uses `DefaultInterpolatedStringHandler` with stack-allocated buffers for maximum performance. Ideal for hot paths and frequently called formatting operations.
+
+```csharp
+FlexibleFormatter formatter = FlexibleFormatter.Parse(
+    "Hello {name}!", 
+    ParameterStyle.Braces,
+    AllocatorType.StackAlloc);
+
+string result = formatter.Format(new Dictionary<string, object?> { ["name"] = "Alice" });
+```
+
+**Benefits:**
+- Significantly faster for small to medium-sized strings
+- Reduces GC pressure by avoiding heap allocations
+- Perfect for high-throughput scenarios
+
+**Limitations:**
+- Buffer size is limited (default: 256 characters, max: 32,768 characters)
+- Not suitable for very large templates or formatted output
+
+### Custom Buffer Size
+
+When using `StackAlloc`, you can specify a custom buffer size between 0 and 32,768 characters:
+
+```csharp
+// For larger templates, increase buffer size
+FlexibleFormatter formatter = FlexibleFormatter.Parse(
+    largeEmailTemplate, 
+    ParameterStyle.Dollar,
+    AllocatorType.StackAlloc,
+    stackAllocBufferSize: 8192);  // 8KB buffer
+```
+
+**Buffer Size Guidelines:**
+- **Small templates (< 256 chars)**: Use default size (256)
+- **Medium templates (256-2048 chars)**: Use 1024-2048
+- **Large templates (2048-8192 chars)**: Use 4096-8192
+- **Very large templates (> 8192 chars)**: Use up to 32,768 or consider `AllocatorType.Heap`
+
+### Choosing the Right Strategy
+
+| Scenario | Recommended AllocatorType | Buffer Size |
+|----------|--------------------------|-------------|
+| Small, frequently formatted strings | StackAlloc | 256 (default) |
+| Email templates (< 2KB) | StackAlloc | 1024-2048 |
+| Large HTML templates (2-8KB) | StackAlloc | 4096-8192 |
+| Very large templates (> 8KB) | StackAlloc | Up to 32,768 |
+| Unknown/variable size output | Heap | N/A |
+| Low-frequency formatting | Heap | N/A |
+
+## FormatNamed API
+
+For better performance with named parameters, use the generic `FormatNamed` methods to avoid dictionary allocations:
+
+### Basic Usage
+
+```csharp
+FlexibleFormatter formatter = FlexibleFormatter.Parse(
+    "Hello {firstName} {lastName}!", 
+    ParameterStyle.Braces);
+
+// Instead of using a dictionary
+string result = formatter.FormatNamed(
+    "firstName", "John",
+    "lastName", "Doe");
+// Output: "Hello John Doe!"
+```
+
+### Performance Comparison
+
+```csharp
+// With Dictionary (slower, allocates dictionary)
+string result1 = formatter.Format(new Dictionary<string, object?> 
+{ 
+    ["firstName"] = "John",
+    ["lastName"] = "Doe"
+});
+
+// With FormatNamed (faster, no dictionary allocation)
+string result2 = formatter.FormatNamed(
+    "firstName", "John",
+    "lastName", "Doe");
+```
+
+### Supported Overloads
+
+`FormatNamed` supports 1 to 7 named parameters:
+
+```csharp
+// 1 parameter
+formatter.FormatNamed("name", "Alice");
+
+// 2 parameters
+formatter.FormatNamed(
+    "firstName", "John",
+    "lastName", "Doe");
+
+// 3 parameters
+formatter.FormatNamed(
+    "title", "Mr.",
+    "firstName", "John",
+    "lastName", "Doe");
+
+// ... up to 7 parameters
+formatter.FormatNamed(
+    "param1", value1,
+    "param2", value2,
+    "param3", value3,
+    "param4", value4,
+    "param5", value5,
+    "param6", value6,
+    "param7", value7);
+```
+
+### Real-World Example
+
+```csharp
+// Email notification template
+FlexibleFormatter emailFormatter = FlexibleFormatter.Parse(
+    "Dear {title} {lastName}, your order #{orderId} has been shipped to {city}, {country}.",
+    ParameterStyle.Braces,
+    AllocatorType.StackAlloc,
+    stackAllocBufferSize: 512);
+
+// High-performance formatting without dictionary allocation
+string notification = emailFormatter.FormatNamed(
+    "title", "Mr.",
+    "lastName", "Smith",
+    "orderId", "ORD-2025-12345",
+    "city", "New York",
+    "country", "USA");
+// Output: "Dear Mr. Smith, your order #ORD-2025-12345 has been shipped to New York, USA."
+```
+
+**Benefits of FormatNamed:**
+- No dictionary allocation overhead
+- Type-safe at compile time with generic parameters
+- Faster execution for 1-7 parameters
+- Works seamlessly with both `Heap` and `StackAlloc` allocators
+
 ## Error Handling
 
 FlexibleFormatter provides clear error messages with exact positions:
@@ -227,7 +389,31 @@ for (int i = 0; i < 1000; i++)
 }
 ```
 
-2. **Check MinimumArgumentCount**: Validate your arguments before formatting:
+2. **Use StackAlloc for hot paths**: For frequently called formatting operations, use `AllocatorType.StackAlloc`:
+
+```csharp
+// High-performance formatter with stack allocation
+FlexibleFormatter formatter = FlexibleFormatter.Parse(
+    "Request {id}: {method} {path} - {status}",
+    ParameterStyle.Braces,
+    AllocatorType.StackAlloc,
+    stackAllocBufferSize: 512);
+
+// In hot path (called millions of times)
+string logEntry = formatter.Format(requestId, method, path, statusCode);
+```
+
+3. **Use FormatNamed for named parameters**: Avoid dictionary allocations with the generic `FormatNamed` API:
+
+```csharp
+// Slower: allocates dictionary
+string result = formatter.Format(new Dictionary<string, object?> { ["name"] = "Alice" });
+
+// Faster: no dictionary allocation
+string result = formatter.FormatNamed("name", "Alice");
+```
+
+4. **Check MinimumArgumentCount**: Validate your arguments before formatting:
 
 ```csharp
 FlexibleFormatter formatter = FlexibleFormatter.Parse("{0} {1} {2}", ParameterStyle.Braces);
@@ -235,7 +421,17 @@ Console.WriteLine($"Requires at least {formatter.MinimumArgumentCount} arguments
 // Output: "Requires at least 3 arguments"
 ```
 
-3. **Use appropriate parameter style**: Dollar and Percent styles are optimized for named parameters only.
+5. **Choose appropriate buffer size**: Match buffer size to your expected output:
+
+```csharp
+// Small templates: default (256)
+var small = FlexibleFormatter.Parse(template, style, AllocatorType.StackAlloc);
+
+// Large templates: custom size
+var large = FlexibleFormatter.Parse(template, style, AllocatorType.StackAlloc, 4096);
+```
+
+6. **Use appropriate parameter style**: Dollar and Percent styles are optimized for named parameters only.
 
 ## Examples
 
@@ -289,17 +485,17 @@ string result = formatter.Format(new Dictionary<string, object?>
 
 ## Benchmark Results
 
-| Method                                         | Mean             | Error         | StdDev        | Ratio | Gen0     | Gen1    | Allocated | Alloc Ratio |
-|----------------------------------------------- |-----------------:|--------------:|--------------:|------:|---------:|--------:|----------:|------------:|
-| FlexibleFormatter_IndexedStyle_Format          |        186.20 ns |      1.854 ns |      1.734 ns | 0.000 |   0.1822 |       - |    1144 B |       0.000 |
-| String_IndexedStyle_Format                     |        189.87 ns |      3.742 ns |      4.732 ns | 0.000 |   0.0777 |       - |     488 B |       0.000 |
-| CustomDelimiters_AngleBrackets_NamedParameters |         71.60 ns |      0.717 ns |      0.671 ns | 0.000 |   0.0446 |       - |     280 B |       0.000 |
-| FlexibleFormatter_DollarStyle_Format           |      2,911.50 ns |     57.918 ns |    118.311 ns | 0.000 |  10.6926 |  0.4845 |   67296 B |       0.012 |
-| StringReplace_DollarStyle_Template             |  2,030,448.81 ns | 14,224.670 ns | 12,609.800 ns | 0.047 |  39.0625 |  3.9063 |  255712 B |       0.047 |
-| Alignment_MixedRightLeft_Formatting            |        245.13 ns |      0.894 ns |      0.792 ns | 0.000 |   0.0787 |       - |     496 B |       0.000 |
-| LiteralsOnly_NoParameters_FastPath             |         66.40 ns |      0.623 ns |      0.552 ns | 0.000 |   0.1606 |  0.0001 |    1008 B |       0.000 |
-| PercentStyle_SimpleTemplate_NamedParameters    |        117.33 ns |      1.578 ns |      1.318 ns | 0.000 |   0.0789 |       - |     496 B |       0.000 |
-| SmallTemplate_BracesStyle_NamedParameters      |        238.39 ns |      3.592 ns |      3.360 ns | 0.000 |   0.2232 |       - |    1400 B |       0.000 |
-| ManyParameters_50Fields_StressTest             |        992.00 ns |     12.442 ns |     11.029 ns | 0.000 |   0.5684 |  0.0019 |    3576 B |       0.001 |
-| LargeHtml_DollarStyle_200Parameters            |     18,109.17 ns |    341.758 ns |    302.959 ns | 0.000 |  23.8037 |  0.2136 |  149888 B |       0.028 |
-| LargeHtml_StringReplace_200Parameters          | 43,292,280.27 ns | 93,447.559 ns | 82,838.827 ns | 1.000 | 833.3333 | 83.3333 | 5395429 B |       1.000 |
+| Method                                         | Mean             | Error          | StdDev         | Median           | Ratio | Gen0     | Gen1   | Allocated | Alloc Ratio |
+|----------------------------------------------- |-----------------:|---------------:|---------------:|-----------------:|------:|---------:|-------:|----------:|------------:|
+| FlexibleFormatter_IndexedStyle_Format          |        139.52 ns |       2.799 ns |       4.599 ns |        137.48 ns | 0.000 |   0.0682 |      - |    1144 B |       0.000 |
+| String_IndexedStyle_Format                     |        153.57 ns |       0.628 ns |       0.557 ns |        153.53 ns | 0.000 |   0.0291 |      - |     488 B |       0.000 |
+| CustomDelimiters_AngleBrackets_NamedParameters |         56.32 ns |       0.609 ns |       0.509 ns |         56.21 ns | 0.000 |   0.0167 |      - |     280 B |       0.000 |
+| FlexibleFormatter_DollarStyle_Format           |      1,196.40 ns |      26.082 ns |      75.667 ns |      1,150.73 ns | 0.000 |   2.5997 | 0.0992 |   43576 B |       0.008 |
+| StringReplace_DollarStyle_Template             |    771,102.50 ns |   2,499.107 ns |   2,215.393 ns |    770,243.75 ns | 0.020 |   5.8594 |      - |  109016 B |       0.020 |
+| Alignment_MixedRightLeft_Formatting            |        149.99 ns |       0.975 ns |       0.814 ns |        149.98 ns | 0.000 |   0.0296 |      - |     496 B |       0.000 |
+| LiteralsOnly_NoParameters_FastPath             |         40.69 ns |       0.562 ns |       0.498 ns |         40.79 ns | 0.000 |   0.0603 | 0.0001 |    1008 B |       0.000 |
+| PercentStyle_SimpleTemplate_NamedParameters    |         72.58 ns |       0.424 ns |       0.376 ns |         72.48 ns | 0.000 |   0.0296 |      - |     496 B |       0.000 |
+| SmallTemplate_BracesStyle_NamedParameters      |        153.20 ns |       1.254 ns |       1.173 ns |        153.05 ns | 0.000 |   0.0837 |      - |    1400 B |       0.000 |
+| ManyParameters_50Fields_StressTest             |        813.25 ns |       6.277 ns |       4.901 ns |        812.61 ns | 0.000 |   0.2251 |      - |    3776 B |       0.001 |
+| LargeHtml_DollarStyle_200Parameters            |     13,304.48 ns |     265.824 ns |     248.652 ns |     13,385.26 ns | 0.000 |   9.0485 | 1.9379 |  151648 B |       0.028 |
+| LargeHtml_StringReplace_200Parameters          | 39,166,810.99 ns | 161,735.526 ns | 143,374.331 ns | 39,138,092.31 ns | 1.000 | 307.6923 |      - | 5491432 B |       1.000 |
